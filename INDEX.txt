@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>區域地震易損性評估展示</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* 設定地圖填滿整個畫面 */
+        body { margin: 0; padding: 0; }
+        #map { width: 100vw; height: 100vh; }
+        
+        /* 設定彈出視窗(Popup)內的圖片大小 */
+        .popup-img {
+            width: 400px; /* 圖片寬度，可依簡報需求調整 */
+            height: auto;
+            margin-top: 10px;
+        }
+        .popup-content {
+            text-align: center;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <script>
+        // 1. 初始化地圖，設定中心點座標與縮放級別
+        // 這裡的座標 [23.977, 121.606] 大約落在花蓮市區，縮放級別 14
+        var map = L.map('map').setView([23.977, 121.606], 14);
+
+        // 2. 載入 OpenStreetMap (OSM) 開源底圖
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 3. 準備你的建築資料 (包含編號與經緯度)
+        // 這邊我先幫你隨機捏造一個花蓮附近的經緯度作為測試
+        var buildings = [
+            {
+                id: "2P5KB5N3WT",
+                lat: 23.980, 
+                lng: 121.600,
+                name: "測試建築 A"
+            }
+            // 如果有其他建築，可以在這裡繼續加上去，例如：
+            // { id: "另一個ID", lat: 23.985, lng: 121.610, name: "測試建築 B" }
+        ];
+
+        // 4. 使用迴圈把每棟建築標記(Marker)加到地圖上
+        buildings.forEach(function(b) {
+            // 定義要顯示的圖片路徑 (先以 Slight 為例)
+            var imgPath = b.id + "/" + b.id + "_Slight_fragility.png";
+            
+            // 設計彈出視窗的 HTML 內容
+            var popupHTML = `
+                <div class="popup-content">
+                    <h3>建築編號: ${b.id}</h3>
+                    <p>損傷狀態: Slight (輕微損傷)</p>
+                    <img src="${imgPath}" class="popup-img" alt="Fragility Curve">
+                </div>
+            `;
+
+            // 將標記加到地圖上，並綁定點擊後彈出的內容
+            L.marker([b.lat, b.lng])
+                .addTo(map)
+                .bindPopup(popupHTML, { maxWidth: 450 }); // 確保彈出視窗夠寬能塞下圖片
+        });
+
+    </script>
+</body>
+</html>

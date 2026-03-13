@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>區域地震易損性評估展示</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script src="buildings_data.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; }
+        
+        .popup-content {
+            text-align: center;
+            min-width: 350px;
+        }
+        .popup-img {
+            width: 100%; 
+            height: auto;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        /* 美化下拉選單 */
+        select {
+            padding: 5px;
+            font-size: 14px;
+            margin: 5px 0;
+            width: 80%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <script>
+        // 初始化地圖 (這裡以花蓮車站附近為初始中心點)
+        var map = L.map('map').setView([23.993, 121.601], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+
+
+        // 將標記加到地圖上
+        buildings.forEach(function(b) {
+            // 預設顯示 Slight 的圖片
+            var defaultImg = `${b.id}/${b.id}_Slight_fragility.png`;
+            
+            // 彈出視窗的 HTML，加入下拉選單 (onchange 事件綁定切換函數)
+            var popupHTML = `
+                <div class="popup-content">
+                    <h3 style="margin-bottom: 5px;">建築編號: ${b.id}</h3>
+                    
+                    <select onchange="changeDamageState('${b.id}', this.value)">
+                        <option value="Slight">Slight (輕微損傷)</option>
+                        <option value="Moderate">Moderate (中度損傷)</option>
+                        <option value="Extensive">Extensive (嚴重損傷)</option>
+                        <option value="Complete">Complete (完全倒塌)</option>
+                    </select>
+                    
+                    <img id="img-${b.id}" src="${defaultImg}" class="popup-img" alt="Fragility Curve" onerror="this.onerror=null; this.src=''; this.alt='找不到對應的圖片檔案';">
+                </div>
+            `;
+
+            L.marker([b.lat, b.lng])
+                .addTo(map)
+                .bindPopup(popupHTML, { maxWidth: 500 }); 
+        });
+
+        // 定義切換圖片的函數
+        function changeDamageState(buildingId, ds) {
+            // 根據選取的損傷狀態，重新組合圖片路徑
+            var newImgPath = `${buildingId}/${buildingId}_${ds}_fragility.png`;
+            // 找到對應的圖片標籤並替換來源
+            document.getElementById(`img-${buildingId}`).src = newImgPath;
+        }
+
+    </script>
+</body>
+</html>
