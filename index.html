@@ -2,156 +2,209 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regional Seismic Fragility Assessment</title>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="buildings_data.js"></script>
 
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         #map { width: 100vw; height: 100vh; position: relative; }
         
-        /* 右側固定資訊面板 */
         #info-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 350px;
-            background: rgba(255, 255, 255, 0.95);
+            position: absolute; top: 20px; right: 20px; width: 450px;
+            background: rgba(255, 255, 255, 0.98); padding: 20px;
+            border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 1000; display: none; flex-direction: column;
+        }
+
+        #map-legend {
+            position: absolute; bottom: 30px; left: 20px;
+            background: rgba(255, 255, 255, 0.9); padding: 10px 15px;
+            border-radius: 8px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 14px; font-weight: bold;
+        }
+        .legend-item { display: flex; align-items: center; margin: 5px 0; }
+        .legend-color { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px; border: 1px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.4);}
+
+        .panel-title { margin: 0 0 15px 0; font-size: 18px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        .control-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+        select { padding: 8px 12px; font-size: 14px; flex-grow: 1; border-radius: 6px; border: 1px solid #bdc3c7; cursor: pointer; }
+        
+        .toggle-container { display: flex; background: #ecf0f1; border-radius: 6px; overflow: hidden; border: 1px solid #bdc3c7; }
+        .toggle-btn { padding: 8px 16px; border: none; background: none; cursor: pointer; font-weight: bold; color: #7f8c8d; transition: all 0.2s; }
+        .toggle-btn.active { background: #3498db; color: white; }
+
+        #chart-container { width: 100%; height: 320px; margin-top: 5px; }
+        
+        #warning-message {
+            color: #e74c3c; 
+            font-weight: bold; 
+            text-align: center; 
+            margin-top: 50px;
+            margin-bottom: 50px;
             padding: 20px;
+            background: #fdf0ed;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000; /* 確保面板浮在地圖之上 */
-            display: none; /* 預設隱藏，點擊標記後顯示 */
-            flex-direction: column;
-        }
-
-        .panel-title {
-            margin: 0 0 10px 0;
-            font-size: 18px;
-            color: #333;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 5px;
-        }
-
-        .no-data-text {
-            color: #888;
-            font-style: italic;
-            margin-top: 10px;
-        }
-
-        .panel-img {
-            width: 100%; 
-            height: auto;
-            margin-top: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        select {
-            padding: 8px;
-            font-size: 14px;
-            margin-top: 10px;
-            width: 100%;
-            cursor: pointer;
-            border-radius: 4px;
-            border: 1px solid #ccc;
+            border: 1px dashed #e74c3c;
         }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
+    
+    <div id="map-legend">
+        <div class="legend-item"><div class="legend-color" style="background: #27ae60;"></div><span id="legend-text">Data Available</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>No Data</span></div>
+    </div>
 
     <div id="info-panel">
         <h3 class="panel-title" id="panel-bldg-id">Building ID: -</h3>
-        <div id="panel-content">
+        <div class="control-group">
+            <select id="ds-select" onchange="updateChart()">
+                <option value="Slight">Slight (IDR=0.5%)</option>
+                <option value="Moderate">Moderate (IDR=1.0%)</option>
+                <option value="Extensive">Extensive (IDR=2.0%)</option>
+                <option value="Complete">Complete (IDR=4.0%)</option>
+            </select>
+            <div class="toggle-container">
+                <button id="btn-2d" class="toggle-btn active" onclick="setAnalysisMode('2D')">2D</button>
+                <button id="btn-3d" class="toggle-btn" onclick="setAnalysisMode('3D')">3D</button>
             </div>
+        </div>
+        
+        <div id="warning-message" style="display: none;"></div>
+        
+        <div id="chart-container"></div>
     </div>
 
     <script>
-        // 初始化地圖 (視角為花蓮)
+        function normalCDF(x) {
+            let t = 1 / (1 + 0.2316419 * Math.abs(x));
+            let d = 0.3989423 * Math.exp(-x * x / 2);
+            let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            return (x > 0) ? 1 - prob : prob;
+        }
+
+        function getLognormalCurve(theta, beta) {
+            let x = [], y = [];
+            for (let i = 0.01; i <= 2.0; i += 0.02) {
+                x.push(i);
+                y.push((theta && beta) ? normalCDF(Math.log(i / theta) / beta) : null);
+            }
+            return {x, y};
+        }
+
+        var currentBuildingId = null;
+        var currentMode = '2D'; 
+        var markerRefs = {}; 
+
         var map = L.map('map').setView([23.993, 121.601], 14);
-
-        // 底圖圖層
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        // 統一所有建築的樣式，不區分是否有資料
-        var markerOptions = {
-            radius: 5,           
-            fillColor: "#3388ff",   
-            color: "#ffffff",       
-            weight: 1.5,           
-            opacity: 1,
-            fillOpacity: 0.8     
-        };
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
 
         var allBuildingsLayer = L.layerGroup();
 
-        // 處理每一個建築資料
-        buildings.forEach(function(b) {
-            var circle = L.circleMarker([b.lat, b.lng], markerOptions);
-            
-            // 綁定點擊事件
-            circle.on('click', function() {
-                showBuildingInfo(b);
+        for (const [b_id, data] of Object.entries(buildings)) {
+            if (!data.lat || !data.lng) continue;
+            var circle = L.circleMarker([data.lat, data.lng], {
+                radius: 5, color: "#ffffff", weight: 1.5, opacity: 1, fillOpacity: 0.85
             });
-
+            circle.on('click', function() { showBuildingInfo(b_id); });
+            markerRefs[b_id] = circle; 
             allBuildingsLayer.addLayer(circle);
-        });
-
+        }
         allBuildingsLayer.addTo(map);
 
-        // 顯示建築資訊到右側面板的函數
-        function showBuildingInfo(b) {
-            var panel = document.getElementById('info-panel');
-            var panelTitle = document.getElementById('panel-bldg-id');
-            var panelContent = document.getElementById('panel-content');
+        function updateMapColors() {
+            var colorGreen = "#27ae60";
+            var colorRed = "#e74c3c";
+            document.getElementById('legend-text').innerText = `${currentMode} Data Available`;
+
+            for (const [b_id, circle] of Object.entries(markerRefs)) {
+                var hasData = currentMode === '2D' ? buildings[b_id].has_2d : buildings[b_id].has_3d;
+                circle.setStyle({ fillColor: hasData ? colorGreen : colorRed });
+            }
+        }
+
+        function setAnalysisMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-2d').classList.remove('active');
+            document.getElementById('btn-3d').classList.remove('active');
+            document.getElementById(`btn-${mode.toLowerCase()}`).classList.add('active');
             
-            // 顯示面板
-            panel.style.display = 'flex';
-            panelTitle.innerText = `Building ID: ${b.id}`;
-
-            if (b.has_data) {
-                // 有資料時：顯示下拉選單與圖表
-                var defaultImg = `${b.id}/${b.id}_Slight_fragility.png`;
-                panelContent.innerHTML = `
-                    <label for="ds-select" style="font-size: 14px; font-weight: bold;">Damage State:</label>
-                    <select id="ds-select" onchange="changeDamageState('${b.id}', this.value)">
-                        <option value="Slight">Slight</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Extensive">Extensive</option>
-                        <option value="Complete">Complete</option>
-                    </select>
-                    <img id="panel-img-display" src="${defaultImg}" class="panel-img" alt="Fragility Curve" onerror="this.onerror=null; this.src=''; this.alt='Image not found';">
-                `;
-            } else {
-                // 無資料時：僅顯示提示文字
-                panelContent.innerHTML = `
-                    <p class="no-data-text">No fragility data available for this building.</p>
-                `;
-            }
+            updateMapColors(); 
+            updateChart();     
         }
 
-        // 切換面板圖片的函數
-        function changeDamageState(buildingId, ds) {
-            var newImgPath = `${buildingId}/${buildingId}_${ds}_fragility.png`;
-            var imgElement = document.getElementById('panel-img-display');
-            if (imgElement) {
-                imgElement.src = newImgPath;
-            }
+        function showBuildingInfo(b_id) {
+            currentBuildingId = b_id;
+            document.getElementById('info-panel').style.display = 'flex';
+            document.getElementById('panel-bldg-id').innerText = `Building ID: ${b_id}`;
+            updateChart();
         }
-        
-        // 點擊地圖空白處時可以選擇隱藏面板 (選用功能)
-        map.on('click', function(e) {
-            // 如果你想點擊海面就關閉圖表，可以取消下面這行的註解
-            // document.getElementById('info-panel').style.display = 'none';
-        });
 
+        function updateChart() {
+            if (!currentBuildingId) return;
+
+            var ds = document.getElementById('ds-select').value;
+            var bldgParams = buildings[currentBuildingId]?.params?.[ds];
+            
+            var chartDiv = document.getElementById('chart-container');
+            var warningDiv = document.getElementById('warning-message');
+
+            var theta_analysis = currentMode === '2D' ? bldgParams?.theta_2d : bldgParams?.theta_3d;
+            var beta_analysis = currentMode === '2D' ? bldgParams?.beta_2d : bldgParams?.beta_3d;
+
+            if (!bldgParams || theta_analysis == null) {
+                chartDiv.style.display = 'none';
+                warningDiv.style.display = 'block';
+                warningDiv.innerText = `${currentMode} analysis data not available for this damage state.`;
+                return;
+            }
+
+            warningDiv.style.display = 'none';
+            chartDiv.style.display = 'block';
+
+            var theta_hazus = bldgParams.theta_hazus;
+            var beta_hazus = bldgParams.beta_hazus;
+
+            var traceHazus = {
+                x: getLognormalCurve(theta_hazus, beta_hazus).x,
+                y: getLognormalCurve(theta_hazus, beta_hazus).y,
+                mode: 'lines', name: `HAZUS (θ=${theta_hazus}, β=${beta_hazus})`,
+                line: { color: '#27AE60', width: 3, dash: 'dot' }
+            };
+
+            var traceAnalysis = {
+                x: getLognormalCurve(theta_analysis, beta_analysis).x,
+                y: getLognormalCurve(theta_analysis, beta_analysis).y,
+                mode: 'lines', name: `${currentMode} Fiber (θ=${theta_analysis}, β=${beta_analysis})`,
+                line: { color: '#C0392B', width: 3, dash: 'dash' }
+            };
+
+            var layout = {
+                title: { text: `Fragility Curve - ${currentMode} vs HAZUS`, font: { size: 14 } },
+                xaxis: { title: 'PGA (g)', range: [0, 2.0] },
+                yaxis: { title: 'Probability of Exceedance', range: [0, 1.05] },
+                // margin.b 增加到 110，margin.t 減少到 40 讓出空間
+                margin: { l: 50, r: 20, t: 40, b: 110 }, 
+                legend: { 
+                    orientation: 'h',      
+                    x: 0.5,                
+                    xanchor: 'center',
+                    y: -0.35,              // y 軸再往下推（負值越大越往下）
+                    yanchor: 'top',        
+                    bgcolor: 'rgba(255,255,255,0)' 
+                },
+                hovermode: 'x unified'
+            };
+
+            Plotly.newPlot('chart-container', [traceHazus, traceAnalysis], layout, {displayModeBar: false});
+        }
+
+        updateMapColors();
     </script>
 </body>
 </html>
