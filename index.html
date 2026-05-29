@@ -257,7 +257,7 @@
                 chartEl.style.opacity = '1';
 
                 if (!has2d && !has3d) {
-                    badge.innerText = '缺少 2D 及 3D 資料';
+                    badge.innerText = 'No 2D & 3D Data Available';
                     badge.style.display = 'block';
                     chartEl.style.opacity = '0.15';
                     Plotly.purge(chartEl);
@@ -268,7 +268,7 @@
                 if (!has2d) missing.push('2D');
                 if (!has3d) missing.push('3D');
                 if (missing.length) {
-                    badge.innerText = `缺少 ${missing.join(' 及 ')} 資料`;
+                    badge.innerText = `No ${missing.join(' & ')} Data Available`;
                     badge.style.display = 'block';
                 }
 
