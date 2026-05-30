@@ -12,336 +12,392 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         #map { width: 100vw; height: 100vh; position: relative; }
 
+        /* ── Info Panel ─────────────────────────────────── */
         #info-panel {
             position: absolute; top: 20px; right: 20px; width: 450px;
-            background: rgba(255, 255, 255, 0.98); padding: 20px;
+            background: rgba(255,255,255,0.98); padding: 20px;
             border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             z-index: 1000; display: none; flex-direction: column;
         }
+        #info-panel.all-mode { width: 860px; }
 
-        /* ALL 模式下加寬面板 */
-        #info-panel.all-mode {
-            width: 860px;
-        }
-
+        /* ── Legend ─────────────────────────────────────── */
         #map-legend {
             position: absolute; bottom: 30px; left: 20px;
-            background: rgba(255, 255, 255, 0.9); padding: 10px 15px;
+            background: rgba(255,255,255,0.9); padding: 10px 15px;
             border-radius: 8px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             font-size: 14px; font-weight: bold;
         }
         .legend-item { display: flex; align-items: center; margin: 5px 0; }
-        .legend-color { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px; border: 1px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.4);}
+        .legend-color { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px;
+                        border: 1px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.4); }
 
-        .panel-title { margin: 0 0 15px 0; font-size: 18px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
-        .control-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
-        select { padding: 8px 12px; font-size: 14px; flex-grow: 1; border-radius: 6px; border: 1px solid #bdc3c7; cursor: pointer; }
+        /* ── Class Filter ───────────────────────────────── */
+        #class-filter {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(255,255,255,0.95); padding: 12px 15px;
+            border-radius: 10px; z-index: 1000; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        }
+        #class-filter .filter-title {
+            font-weight: bold; color: #2c3e50; margin-bottom: 8px;
+            font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .class-btn {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 12px; margin: 4px 0;
+            border-radius: 6px; border: 2px solid transparent;
+            cursor: pointer; font-weight: bold; font-size: 13px;
+            transition: opacity 0.2s, border 0.2s; width: 100%; background: none;
+        }
+        .class-btn .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+        .class-btn.active  { border-color: currentColor; opacity: 1; }
+        .class-btn.inactive { opacity: 0.3; border-color: transparent; }
 
-        .toggle-container { display: flex; background: #ecf0f1; border-radius: 6px; overflow: hidden; border: 1px solid #bdc3c7; }
-        .toggle-btn { padding: 8px 16px; border: none; background: none; cursor: pointer; font-weight: bold; color: #7f8c8d; transition: all 0.2s; }
-        .toggle-btn.active { background: #3498db; color: white; }
+        /* ── Panel Controls ─────────────────────────────── */
+        .panel-title { margin: 0 0 15px 0; font-size: 18px; color: #2c3e50;
+                       border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        .control-group { display: flex; justify-content: space-between; align-items: center;
+                         margin-bottom: 15px; gap: 10px; }
+        select { padding: 8px 12px; font-size: 14px; flex-grow: 1;
+                 border-radius: 6px; border: 1px solid #bdc3c7; cursor: pointer; }
+        .toggle-container { display: flex; background: #ecf0f1; border-radius: 6px;
+                            overflow: hidden; border: 1px solid #bdc3c7; flex-shrink: 0; }
+        .toggle-btn { padding: 8px 16px; border: none; background: none;
+                      cursor: pointer; font-weight: bold; color: #7f8c8d; transition: all 0.2s; }
+        .toggle-btn.active     { background: #3498db; color: white; }
         .toggle-btn.all-active { background: #8e44ad; color: white; }
 
+        /* ── Single Chart ───────────────────────────────── */
         #chart-container { width: 100%; height: 320px; margin-top: 5px; }
 
-        /* ALL 模式 2×2 格線 */
-        #all-charts-container {
-            display: none;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 5px;
-        }
+        /* ── ALL 2×2 Grid ───────────────────────────────── */
+        #all-charts-container { display: none; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         #all-charts-container.visible { display: grid; }
-        .sub-chart { width: 100%; height: 260px; position: relative; }
+        .sub-chart-wrap { position: relative; }
+        .sub-chart { width: 100%; height: 260px; }
         .missing-badge {
             position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%,-50%);
             background: #fdf0ed; border: 1px dashed #e74c3c;
             color: #e74c3c; font-weight: bold; font-size: 12px;
-            padding: 8px 12px; border-radius: 6px; text-align: center;
-            pointer-events: none;
+            padding: 8px 14px; border-radius: 6px; text-align: center;
+            pointer-events: none; white-space: nowrap;
         }
 
+        /* ── Warning ────────────────────────────────────── */
         #warning-message {
-            color: #e74c3c;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 50px;
-            margin-bottom: 50px;
-            padding: 20px;
-            background: #fdf0ed;
-            border-radius: 8px;
-            border: 1px dashed #e74c3c;
+            color: #e74c3c; font-weight: bold; text-align: center;
+            margin: 40px 0; padding: 20px;
+            background: #fdf0ed; border-radius: 8px; border: 1px dashed #e74c3c;
         }
-
-        /* ALL 模式隱藏 DS 下拉 */
         #ds-select-wrap.hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="map"></div>
+<div id="map"></div>
 
-    <div id="map-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #27ae60;"></div><span id="legend-text">Data Available</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>No Data</span></div>
+<!-- Data-availability legend -->
+<div id="map-legend">
+    <div class="legend-item">
+        <div class="legend-color" style="background:#27ae60;"></div>
+        <span id="legend-text">Data Available</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" style="background:#e74c3c;"></div>
+        <span>No Data</span>
+    </div>
+</div>
+
+<!-- Building-class filter -->
+<div id="class-filter">
+    <div class="filter-title">Building Class</div>
+    <button class="class-btn active" id="filter-C1H" style="color:#e67e22;"
+            onclick="toggleClass('C1H')">
+        <span class="dot" style="background:#e67e22;"></span>
+        C1H &nbsp;≥ 8F
+    </button>
+    <button class="class-btn active" id="filter-C1M" style="color:#2980b9;"
+            onclick="toggleClass('C1M')">
+        <span class="dot" style="background:#2980b9;"></span>
+        C1M &nbsp;4 – 7F
+    </button>
+    <button class="class-btn active" id="filter-C1L" style="color:#27ae60;"
+            onclick="toggleClass('C1L')">
+        <span class="dot" style="background:#27ae60;"></span>
+        C1L &nbsp;1 – 3F
+    </button>
+</div>
+
+<!-- Info panel -->
+<div id="info-panel">
+    <h3 class="panel-title" id="panel-bldg-id">Building ID: -</h3>
+    <div class="control-group">
+        <span id="ds-select-wrap">
+            <select id="ds-select" onchange="updateChart()">
+                <option value="Slight">Slight (IDR=0.5%)</option>
+                <option value="Moderate">Moderate (IDR=1.0%)</option>
+                <option value="Extensive">Extensive (IDR=2.0%)</option>
+                <option value="Complete">Complete (IDR=4.0%)</option>
+            </select>
+        </span>
+        <div class="toggle-container">
+            <button id="btn-2d"  class="toggle-btn active" onclick="setAnalysisMode('2D')">2D</button>
+            <button id="btn-3d"  class="toggle-btn"        onclick="setAnalysisMode('3D')">3D</button>
+            <button id="btn-all" class="toggle-btn"        onclick="setAnalysisMode('ALL')">ALL</button>
+        </div>
     </div>
 
-    <div id="info-panel">
-        <h3 class="panel-title" id="panel-bldg-id">Building ID: -</h3>
-        <div class="control-group">
-            <span id="ds-select-wrap">
-                <select id="ds-select" onchange="updateChart()">
-                    <option value="Slight">Slight (IDR=0.5%)</option>
-                    <option value="Moderate">Moderate (IDR=1.0%)</option>
-                    <option value="Extensive">Extensive (IDR=2.0%)</option>
-                    <option value="Complete">Complete (IDR=4.0%)</option>
-                </select>
-            </span>
-            <div class="toggle-container">
-                <button id="btn-2d" class="toggle-btn active" onclick="setAnalysisMode('2D')">2D</button>
-                <button id="btn-3d" class="toggle-btn" onclick="setAnalysisMode('3D')">3D</button>
-                <button id="btn-all" class="toggle-btn" onclick="setAnalysisMode('ALL')">ALL</button>
-            </div>
+    <div id="warning-message" style="display:none;"></div>
+    <div id="chart-container"></div>
+
+    <div id="all-charts-container">
+        <div class="sub-chart-wrap">
+            <div class="sub-chart" id="chart-Slight"></div>
+            <div class="missing-badge" id="badge-Slight" style="display:none;"></div>
         </div>
-
-        <div id="warning-message" style="display: none;"></div>
-        <div id="chart-container"></div>
-
-        <!-- 2×2 ALL 模式 -->
-        <div id="all-charts-container">
-            <div style="position:relative;"><div class="sub-chart" id="chart-Slight"></div><div class="missing-badge" id="badge-Slight" style="display:none;"></div></div>
-            <div style="position:relative;"><div class="sub-chart" id="chart-Moderate"></div><div class="missing-badge" id="badge-Moderate" style="display:none;"></div></div>
-            <div style="position:relative;"><div class="sub-chart" id="chart-Extensive"></div><div class="missing-badge" id="badge-Extensive" style="display:none;"></div></div>
-            <div style="position:relative;"><div class="sub-chart" id="chart-Complete"></div><div class="missing-badge" id="badge-Complete" style="display:none;"></div></div>
+        <div class="sub-chart-wrap">
+            <div class="sub-chart" id="chart-Moderate"></div>
+            <div class="missing-badge" id="badge-Moderate" style="display:none;"></div>
+        </div>
+        <div class="sub-chart-wrap">
+            <div class="sub-chart" id="chart-Extensive"></div>
+            <div class="missing-badge" id="badge-Extensive" style="display:none;"></div>
+        </div>
+        <div class="sub-chart-wrap">
+            <div class="sub-chart" id="chart-Complete"></div>
+            <div class="missing-badge" id="badge-Complete" style="display:none;"></div>
         </div>
     </div>
+</div>
 
-    <script>
-        function normalCDF(x) {
-            let t = 1 / (1 + 0.2316419 * Math.abs(x));
-            let d = 0.3989423 * Math.exp(-x * x / 2);
-            let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-            return (x > 0) ? 1 - prob : prob;
-        }
+<script>
+    /* ── Constants ──────────────────────────────────────── */
+    const CLASS_COLOR = { C1H: '#e67e22', C1M: '#2980b9', C1L: '#27ae60' };
+    const DS_LIST = ['Slight','Moderate','Extensive','Complete'];
+    const DS_IDR  = { Slight:'0.5%', Moderate:'1.0%', Extensive:'2.0%', Complete:'4.0%' };
 
-        function getLognormalCurve(theta, beta) {
-            let x = [], y = [];
-            for (let i = 0.01; i <= 2.0; i += 0.02) {
-                x.push(parseFloat(i.toFixed(3)));
-                y.push((theta && beta) ? normalCDF(Math.log(i / theta) / beta) : null);
-            }
-            return {x, y};
-        }
+    /* ── State ──────────────────────────────────────────── */
+    var currentBuildingId = null;
+    var currentMode = '2D';
+    var activeClasses = { C1H: true, C1M: true, C1L: true };
+    var markerRefs = {};
 
-        var currentBuildingId = null;
-        var currentMode = '2D';
-        var markerRefs = {};
+    /* ── Map setup ──────────────────────────────────────── */
+    var map = L.map('map').setView([23.993, 121.601], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
 
-        var map = L.map('map').setView([23.993, 121.601], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
+    var allBuildingsLayer = L.layerGroup().addTo(map);
 
-        var allBuildingsLayer = L.layerGroup();
+    for (const [b_id, data] of Object.entries(buildings)) {
+        if (!data.lat || !data.lng) continue;
+        var circle = L.circleMarker([data.lat, data.lng], {
+            radius: 5, color: '#ffffff', weight: 1.5, opacity: 1, fillOpacity: 0.85
+        });
+        circle.on('click', (function(id) {
+            return function() { showBuildingInfo(id); };
+        })(b_id));
+        markerRefs[b_id] = circle;
+        allBuildingsLayer.addLayer(circle);
+    }
 
-        for (const [b_id, data] of Object.entries(buildings)) {
-            if (!data.lat || !data.lng) continue;
-            var circle = L.circleMarker([data.lat, data.lng], {
-                radius: 5, color: "#ffffff", weight: 1.5, opacity: 1, fillOpacity: 0.85
-            });
-            circle.on('click', (function(id) {
-                return function() { showBuildingInfo(id); };
-            })(b_id));
-            markerRefs[b_id] = circle;
-            allBuildingsLayer.addLayer(circle);
-        }
-        allBuildingsLayer.addTo(map);
+    /* ── Class filter ───────────────────────────────────── */
+    function toggleClass(cls) {
+        activeClasses[cls] = !activeClasses[cls];
+        var btn = document.getElementById('filter-' + cls);
+        btn.classList.toggle('active',   activeClasses[cls]);
+        btn.classList.toggle('inactive', !activeClasses[cls]);
+        refreshMarkers();
+    }
 
-        function updateMapColors() {
-            var colorGreen = "#27ae60";
-            var colorRed = "#e74c3c";
-            if (currentMode === 'ALL') {
-                document.getElementById('legend-text').innerText = '2D & 3D Data Available';
-                for (const [b_id, circle] of Object.entries(markerRefs)) {
-                    var has = buildings[b_id].has_2d && buildings[b_id].has_3d;
-                    circle.setStyle({ fillColor: has ? colorGreen : colorRed });
-                }
-            } else {
-                document.getElementById('legend-text').innerText = `${currentMode} Data Available`;
-                for (const [b_id, circle] of Object.entries(markerRefs)) {
-                    var hasData = currentMode === '2D' ? buildings[b_id].has_2d : buildings[b_id].has_3d;
-                    circle.setStyle({ fillColor: hasData ? colorGreen : colorRed });
-                }
-            }
-        }
+    /* ── Map colors & visibility ────────────────────────── */
+    function refreshMarkers() {
+        for (const [b_id, circle] of Object.entries(markerRefs)) {
+            var bdata = buildings[b_id];
+            var cls   = bdata.b_type || 'C1L';
 
-        function setAnalysisMode(mode) {
-            currentMode = mode;
-            ['2d','3d','all'].forEach(m => {
-                document.getElementById(`btn-${m}`).classList.remove('active','all-active');
-            });
-            if (mode === 'ALL') {
-                document.getElementById('btn-all').classList.add('all-active');
-            } else {
-                document.getElementById(`btn-${mode.toLowerCase()}`).classList.add('active');
+            if (!activeClasses[cls]) {
+                circle.setStyle({ fillOpacity: 0, opacity: 0 });
+                continue;
             }
 
-            // ds 下拉在 ALL 模式隱藏
-            document.getElementById('ds-select-wrap').classList.toggle('hidden', mode === 'ALL');
+            circle.setStyle({ opacity: 1, fillOpacity: 0.85 });
 
-            // 面板寬度
-            document.getElementById('info-panel').classList.toggle('all-mode', mode === 'ALL');
+            var hasData = currentMode === 'ALL'
+                ? (bdata.has_2d && bdata.has_3d)
+                : (currentMode === '2D' ? bdata.has_2d : bdata.has_3d);
 
-            updateMapColors();
-            updateChart();
+            circle.setStyle({ fillColor: hasData ? '#27ae60' : '#e74c3c' });
         }
 
-        function showBuildingInfo(b_id) {
-            currentBuildingId = b_id;
-            document.getElementById('info-panel').style.display = 'flex';
-            document.getElementById('panel-bldg-id').innerText = `Building ID: ${b_id}`;
-            updateChart();
+        var label = currentMode === 'ALL' ? '2D & 3D Data Available' : currentMode + ' Data Available';
+        document.getElementById('legend-text').innerText = label;
+    }
+
+    /* ── Analysis mode ──────────────────────────────────── */
+    function setAnalysisMode(mode) {
+        currentMode = mode;
+        ['2d','3d','all'].forEach(m =>
+            document.getElementById('btn-' + m).classList.remove('active','all-active')
+        );
+        if (mode === 'ALL') {
+            document.getElementById('btn-all').classList.add('all-active');
+        } else {
+            document.getElementById('btn-' + mode.toLowerCase()).classList.add('active');
         }
+        document.getElementById('ds-select-wrap').classList.toggle('hidden', mode === 'ALL');
+        document.getElementById('info-panel').classList.toggle('all-mode', mode === 'ALL');
+        refreshMarkers();
+        updateChart();
+    }
 
-        /* ── 單張圖（2D / 3D 模式）────────────────────────────── */
-        function updateChart() {
-            if (!currentBuildingId) return;
+    /* ── Click building ─────────────────────────────────── */
+    function showBuildingInfo(b_id) {
+        currentBuildingId = b_id;
+        document.getElementById('info-panel').style.display = 'flex';
+        var btype = buildings[b_id].b_type || '';
+        document.getElementById('panel-bldg-id').innerText =
+            'Building ID: ' + b_id + (btype ? '  (' + btype + ')' : '');
+        updateChart();
+    }
 
-            var chartDiv   = document.getElementById('chart-container');
-            var warningDiv = document.getElementById('warning-message');
-            var allDiv     = document.getElementById('all-charts-container');
+    /* ── Chart dispatcher ───────────────────────────────── */
+    function updateChart() {
+        if (!currentBuildingId) return;
 
-            if (currentMode === 'ALL') {
-                chartDiv.style.display  = 'none';
-                warningDiv.style.display = 'none';
-                allDiv.classList.add('visible');
-                renderAllCharts();
-                return;
-            }
+        var chartDiv   = document.getElementById('chart-container');
+        var warningDiv = document.getElementById('warning-message');
+        var allDiv     = document.getElementById('all-charts-container');
 
-            allDiv.classList.remove('visible');
-
-            var ds = document.getElementById('ds-select').value;
-            var bldgParams = buildings[currentBuildingId]?.params?.[ds];
-            var theta_a = currentMode === '2D' ? bldgParams?.theta_2d : bldgParams?.theta_3d;
-            var beta_a  = currentMode === '2D' ? bldgParams?.beta_2d  : bldgParams?.beta_3d;
-
-            if (!bldgParams || theta_a == null) {
-                chartDiv.style.display   = 'none';
-                warningDiv.style.display = 'block';
-                warningDiv.innerText = `${currentMode} analysis data not available for this damage state.`;
-                return;
-            }
-
+        if (currentMode === 'ALL') {
+            chartDiv.style.display   = 'none';
             warningDiv.style.display = 'none';
-            chartDiv.style.display   = 'block';
-
-            var traces  = buildSingleTraces(bldgParams, currentMode, theta_a, beta_a);
-            var layout  = singleLayout(`Fragility Curve - ${currentMode} vs HAZUS`);
-            Plotly.newPlot('chart-container', traces, layout, {displayModeBar: false});
+            allDiv.classList.add('visible');
+            renderAllCharts();
+            return;
         }
 
-        /* ── 四張圖（ALL 模式）──────────────────────────────────── */
-        const DS_LIST = ['Slight','Moderate','Extensive','Complete'];
-        const DS_IDR  = {Slight:'0.5%', Moderate:'1.0%', Extensive:'2.0%', Complete:'4.0%'};
+        allDiv.classList.remove('visible');
 
-        function renderAllCharts() {
-            DS_LIST.forEach(ds => {
-                var params = buildings[currentBuildingId]?.params?.[ds];
-                var chartEl = document.getElementById(`chart-${ds}`);
-                var badge   = document.getElementById(`badge-${ds}`);
+        var ds     = document.getElementById('ds-select').value;
+        var params = buildings[currentBuildingId]?.params?.[ds];
+        var theta  = currentMode === '2D' ? params?.theta_2d : params?.theta_3d;
+        var beta   = currentMode === '2D' ? params?.beta_2d  : params?.beta_3d;
 
-                var has2d = params?.theta_2d != null;
-                var has3d = params?.theta_3d != null;
-
-                badge.style.display = 'none';
-                chartEl.style.opacity = '1';
-
-                if (!has2d && !has3d) {
-                    badge.innerText = 'No 2D & 3D Data Available';
-                    badge.style.display = 'block';
-                    chartEl.style.opacity = '0.15';
-                    Plotly.purge(chartEl);
-                    return;
-                }
-
-                var missing = [];
-                if (!has2d) missing.push('2D');
-                if (!has3d) missing.push('3D');
-                if (missing.length) {
-                    badge.innerText = `No ${missing.join(' & ')} Data Available`;
-                    badge.style.display = 'block';
-                }
-
-                var traces = [];
-
-                // HAZUS
-                var th = params.theta_hazus, bh = params.beta_hazus;
-                traces.push({
-                    ...getLognormalCurve(th, bh),
-                    mode: 'lines', name: `HAZUS (θ=${th}, β=${bh})`,
-                    line: { color: '#27AE60', width: 2, dash: 'dot' }
-                });
-
-                // 2D
-                if (has2d) {
-                    traces.push({
-                        ...getLognormalCurve(params.theta_2d, params.beta_2d),
-                        mode: 'lines', name: `2D Fiber (θ=${params.theta_2d}, β=${params.beta_2d})`,
-                        line: { color: '#2980B9', width: 2, dash: 'dash' }
-                    });
-                }
-
-                // 3D
-                if (has3d) {
-                    traces.push({
-                        ...getLognormalCurve(params.theta_3d, params.beta_3d),
-                        mode: 'lines', name: `3D Fiber (θ=${params.theta_3d}, β=${params.beta_3d})`,
-                        line: { color: '#C0392B', width: 2, dash: 'solid' }
-                    });
-                }
-
-                var layout = {
-                    title: { text: `${ds} (IDR=${DS_IDR[ds]})`, font: { size: 12 } },
-                    xaxis: { title: 'PGA (g)', range: [0, 2.0], titlefont: {size:11} },
-                    yaxis: { title: 'P(Exceedance)', range: [0, 1.05], titlefont: {size:11} },
-                    margin: { l: 45, r: 10, t: 35, b: 100 },
-                    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.38, yanchor: 'top', font: {size: 10} },
-                    hovermode: 'x unified',
-                    plot_bgcolor: '#fafafa'
-                };
-
-                Plotly.newPlot(chartEl, traces, layout, {displayModeBar: false, responsive: true});
-            });
+        if (!params || theta == null) {
+            chartDiv.style.display   = 'none';
+            warningDiv.style.display = 'block';
+            warningDiv.innerText = currentMode + ' analysis data not available for this damage state.';
+            return;
         }
 
-        /* ── helpers ───────────────────────────────────────────── */
-        function buildSingleTraces(p, mode, theta_a, beta_a) {
-            return [
-                {
-                    ...getLognormalCurve(p.theta_hazus, p.beta_hazus),
-                    mode: 'lines', name: `HAZUS (θ=${p.theta_hazus}, β=${p.beta_hazus})`,
-                    line: { color: '#27AE60', width: 3, dash: 'dot' }
-                },
-                {
-                    ...getLognormalCurve(theta_a, beta_a),
-                    mode: 'lines', name: `${mode} Fiber (θ=${theta_a}, β=${beta_a})`,
-                    line: { color: '#C0392B', width: 3, dash: 'dash' }
-                }
+        warningDiv.style.display = 'none';
+        chartDiv.style.display   = 'block';
+
+        Plotly.newPlot('chart-container', [
+            makeCurve(params.theta_hazus, params.beta_hazus,
+                      'HAZUS (θ='+params.theta_hazus+', β='+params.beta_hazus+')',
+                      '#27AE60', 'dot'),
+            makeCurve(theta, beta,
+                      currentMode+' Fiber (θ='+theta+', β='+beta+')',
+                      '#C0392B', 'dash')
+        ], singleLayout('Fragility Curve – ' + currentMode + ' vs HAZUS'),
+        { displayModeBar: false });
+    }
+
+    /* ── ALL: four sub-charts ───────────────────────────── */
+    function renderAllCharts() {
+        DS_LIST.forEach(function(ds) {
+            var params  = buildings[currentBuildingId]?.params?.[ds];
+            var chartEl = document.getElementById('chart-' + ds);
+            var badge   = document.getElementById('badge-' + ds);
+            var has2d   = params?.theta_2d != null;
+            var has3d   = params?.theta_3d != null;
+
+            badge.style.display  = 'none';
+            chartEl.style.opacity = '1';
+
+            if (!has2d && !has3d) {
+                badge.innerText      = 'No 2D & 3D Data Available';
+                badge.style.display  = 'block';
+                chartEl.style.opacity = '0.1';
+                Plotly.purge(chartEl);
+                return;
+            }
+
+            var missing = [];
+            if (!has2d) missing.push('2D');
+            if (!has3d) missing.push('3D');
+            if (missing.length) {
+                badge.innerText     = 'No ' + missing.join(' & ') + ' Data Available';
+                badge.style.display = 'block';
+            }
+
+            var traces = [
+                makeCurve(params.theta_hazus, params.beta_hazus,
+                          'HAZUS (θ='+params.theta_hazus+', β='+params.beta_hazus+')',
+                          '#27AE60', 'dot', 2)
             ];
-        }
+            if (has2d) traces.push(
+                makeCurve(params.theta_2d, params.beta_2d,
+                          '2D Fiber (θ='+params.theta_2d+', β='+params.beta_2d+')',
+                          '#2980B9', 'dash', 2)
+            );
+            if (has3d) traces.push(
+                makeCurve(params.theta_3d, params.beta_3d,
+                          '3D Fiber (θ='+params.theta_3d+', β='+params.beta_3d+')',
+                          '#C0392B', 'solid', 2)
+            );
 
-        function singleLayout(title) {
-            return {
-                title: { text: title, font: { size: 14 } },
-                xaxis: { title: 'PGA (g)', range: [0, 2.0] },
-                yaxis: { title: 'Probability of Exceedance', range: [0, 1.05] },
-                margin: { l: 50, r: 20, t: 40, b: 110 },
-                legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.35, yanchor: 'top', bgcolor: 'rgba(255,255,255,0)' },
-                hovermode: 'x unified'
-            };
-        }
+            Plotly.newPlot(chartEl, traces, {
+                title: { text: ds + ' (IDR=' + DS_IDR[ds] + ')', font: { size: 12 } },
+                xaxis: { title: 'PGA (g)', range: [0, 2.0], titlefont: { size: 11 } },
+                yaxis: { title: 'P(Exceedance)', range: [0, 1.05], titlefont: { size: 11 } },
+                margin: { l: 45, r: 10, t: 35, b: 100 },
+                legend: { orientation: 'h', x: 0.5, xanchor: 'center',
+                          y: -0.38, yanchor: 'top', font: { size: 10 } },
+                hovermode: 'x unified', plot_bgcolor: '#fafafa'
+            }, { displayModeBar: false, responsive: true });
+        });
+    }
 
-        updateMapColors();
-    </script>
+    /* ── Helpers ────────────────────────────────────────── */
+    function normalCDF(x) {
+        var t = 1 / (1 + 0.2316419 * Math.abs(x));
+        var d = 0.3989423 * Math.exp(-x * x / 2);
+        var p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+        return x > 0 ? 1 - p : p;
+    }
+
+    function getLognormalCurve(theta, beta) {
+        var x = [], y = [];
+        for (var v = 0.01; v <= 2.0; v += 0.02) {
+            x.push(parseFloat(v.toFixed(3)));
+            y.push(normalCDF(Math.log(v / theta) / beta));
+        }
+        return { x: x, y: y };
+    }
+
+    function makeCurve(theta, beta, name, color, dash, width) {
+        var curve = getLognormalCurve(theta, beta);
+        return { x: curve.x, y: curve.y, mode: 'lines', name: name,
+                 line: { color: color, width: width || 3, dash: dash } };
+    }
+
+    function singleLayout(title) {
+        return {
+            title: { text: title, font: { size: 14 } },
+            xaxis: { title: 'PGA (g)', range: [0, 2.0] },
+            yaxis: { title: 'Probability of Exceedance', range: [0, 1.05] },
+            margin: { l: 50, r: 20, t: 40, b: 110 },
+            legend: { orientation: 'h', x: 0.5, xanchor: 'center',
+                      y: -0.35, yanchor: 'top', bgcolor: 'rgba(255,255,255,0)' },
+            hovermode: 'x unified'
+        };
+    }
+
+    /* ── Init ───────────────────────────────────────────── */
+    refreshMarkers();
+</script>
 </body>
 </html>
