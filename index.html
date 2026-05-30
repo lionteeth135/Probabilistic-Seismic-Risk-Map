@@ -212,22 +212,22 @@
 
     /* ── Map colors & visibility ────────────────────────── */
     function refreshMarkers() {
+        allBuildingsLayer.clearLayers();
+
         for (const [b_id, circle] of Object.entries(markerRefs)) {
             var bdata = buildings[b_id];
             var cls   = bdata.b_type || 'C1L';
 
-            if (!activeClasses[cls]) {
-                circle.setStyle({ fillOpacity: 0, opacity: 0 });
-                continue;
-            }
-
-            circle.setStyle({ opacity: 1, fillOpacity: 0.85 });
+            // 只把啟用等級的標記加回地圖
+            if (!activeClasses[cls]) continue;
 
             var hasData = currentMode === 'ALL'
                 ? (bdata.has_2d && bdata.has_3d)
                 : (currentMode === '2D' ? bdata.has_2d : bdata.has_3d);
 
-            circle.setStyle({ fillColor: hasData ? '#27ae60' : '#e74c3c' });
+            circle.setStyle({ opacity: 1, fillOpacity: 0.85,
+                              fillColor: hasData ? '#27ae60' : '#e74c3c' });
+            allBuildingsLayer.addLayer(circle);
         }
 
         var label = currentMode === 'ALL' ? '2D & 3D Data Available' : currentMode + ' Data Available';
