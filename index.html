@@ -142,9 +142,10 @@
             </select>
         </span>
         <div class="toggle-container">
-            <button id="btn-2d"  class="toggle-btn active" onclick="setAnalysisMode('2D')">2D</button>
-            <button id="btn-3d"  class="toggle-btn"        onclick="setAnalysisMode('3D')">3D</button>
-            <button id="btn-all" class="toggle-btn"        onclick="setAnalysisMode('ALL')">ALL</button>
+            <button id="btn-2d"   class="toggle-btn active" onclick="setAnalysisMode('2D')">2D</button>
+            <button id="btn-3d"   class="toggle-btn"        onclick="setAnalysisMode('3D')">3D</button>
+            <button id="btn-phys" class="toggle-btn"        onclick="setAnalysisMode('PHYS')">PHYS</button>
+            <button id="btn-all"  class="toggle-btn"        onclick="setAnalysisMode('ALL')">ALL</button>
         </div>
     </div>
 
@@ -176,6 +177,11 @@
     const CLASS_COLOR = { C1H: '#e67e22', C1M: '#2980b9', C1L: '#27ae60' };
     const DS_LIST = ['Slight','Moderate','Extensive','Complete'];
     const DS_IDR  = { Slight:'0.5%', Moderate:'1.0%', Extensive:'2.0%', Complete:'4.0%' };
+    const MODE_STYLE = {
+        '2D':   { color: '#2980B9', label: '2D Fiber' },
+        '3D':   { color: '#C0392B', label: '3D Fiber' },
+        'PHYS': { color: '#8E44AD', label: 'Physics PSDM' }
+    };
 
     /* ── State ──────────────────────────────────────────── */
     var currentBuildingId = null;
@@ -223,7 +229,10 @@
 
             var hasData = currentMode === 'ALL'
                 ? (bdata.has_2d && bdata.has_3d)
-                : (currentMode === '2D' ? bdata.has_2d : bdata.has_3d);
+                : (currentMode === '2D'   ? bdata.has_2d
+                :  currentMode === '3D'   ? bdata.has_3d
+                :  currentMode === 'PHYS' ? bdata.has_phys
+                :  bdata.has_2d);
 
             circle.setStyle({ opacity: 1, fillOpacity: 0.85,
                               fillColor: hasData ? '#27ae60' : '#e74c3c' });
@@ -237,7 +246,7 @@
     /* ── Analysis mode ──────────────────────────────────── */
     function setAnalysisMode(mode) {
         currentMode = mode;
-        ['2d','3d','all'].forEach(m =>
+        ['2d','3d','phys','all'].forEach(m =>
             document.getElementById('btn-' + m).classList.remove('active','all-active')
         );
         if (mode === 'ALL') {
@@ -281,8 +290,12 @@
 
         var ds     = document.getElementById('ds-select').value;
         var params = buildings[currentBuildingId]?.params?.[ds];
-        var theta  = currentMode === '2D' ? params?.theta_2d : params?.theta_3d;
-        var beta   = currentMode === '2D' ? params?.beta_2d  : params?.beta_3d;
+        var theta  = currentMode === '2D' ? params?.theta_2d
+                   : currentMode === '3D' ? params?.theta_3d
+                   : params?.theta_phys;
+        var beta   = currentMode === '2D' ? params?.beta_2d
+                   : currentMode === '3D' ? params?.beta_3d
+                   : params?.beta_phys;
 
         if (!params || theta == null) {
             chartDiv.style.display   = 'none';
@@ -294,14 +307,15 @@
         warningDiv.style.display = 'none';
         chartDiv.style.display   = 'block';
 
+        var st = MODE_STYLE[currentMode];
         Plotly.newPlot('chart-container', [
             makeCurve(params.theta_hazus, params.beta_hazus,
                       'HAZUS (θ='+params.theta_hazus+', β='+params.beta_hazus+')',
                       '#27AE60', 'dot'),
             makeCurve(theta, beta,
-                      currentMode+' Fiber (θ='+theta+', β='+beta+')',
-                      '#C0392B', 'dash')
-        ], singleLayout('Fragility Curve – ' + currentMode + ' vs HAZUS'),
+                      st.label+' (θ='+theta+', β='+beta+')',
+                      st.color, 'dash')
+        ], singleLayout('Fragility Curve – ' + st.label + ' vs HAZUS'),
         { displayModeBar: false });
     }
 
@@ -313,12 +327,13 @@
             var badge   = document.getElementById('badge-' + ds);
             var has2d   = params?.theta_2d != null;
             var has3d   = params?.theta_3d != null;
+            var hasP    = params?.theta_phys != null;
 
             badge.style.display  = 'none';
             chartEl.style.opacity = '1';
 
-            if (!has2d && !has3d) {
-                badge.innerText      = 'No 2D & 3D Data Available';
+            if (!has2d && !has3d && !hasP) {
+                badge.innerText      = 'No Data Available';
                 badge.style.display  = 'block';
                 chartEl.style.opacity = '0.1';
                 Plotly.purge(chartEl);
@@ -328,8 +343,9 @@
             var missing = [];
             if (!has2d) missing.push('2D');
             if (!has3d) missing.push('3D');
+            if (!hasP)  missing.push('PHYS');
             if (missing.length) {
-                badge.innerText     = 'No ' + missing.join(' & ') + ' Data Available';
+                badge.innerText     = 'No ' + missing.join(' & ') + ' Data';
                 badge.style.display = 'block';
             }
 
@@ -347,6 +363,11 @@
                 makeCurve(params.theta_3d, params.beta_3d,
                           '3D Fiber (θ='+params.theta_3d+', β='+params.beta_3d+')',
                           '#C0392B', 'solid', 2)
+            );
+            if (hasP) traces.push(
+                makeCurve(params.theta_phys, params.beta_phys,
+                          'Physics PSDM (θ='+params.theta_phys+', β='+params.beta_phys+')',
+                          '#8E44AD', 'dashdot', 2)
             );
 
             Plotly.newPlot(chartEl, traces, {
