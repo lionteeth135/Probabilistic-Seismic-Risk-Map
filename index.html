@@ -310,10 +310,10 @@
         var st = MODE_STYLE[currentMode];
         Plotly.newPlot('chart-container', [
             makeCurve(params.theta_hazus, params.beta_hazus,
-                      'HAZUS (M<sub>IM</sub>='+params.theta_hazus+', β='+params.beta_hazus+')',
+                      'HAZUS (μ<sub>IM</sub>='+params.theta_hazus+', β='+params.beta_hazus+')',
                       '#27AE60', 'dot'),
             makeCurve(theta, beta,
-                      st.label+' (M<sub>IM</sub>='+theta+', β='+beta+')',
+                      st.label+' (μ<sub>IM</sub>='+theta+', β='+beta+')',
                       st.color, 'dash')
         ], singleLayout('Fragility Curve – ' + st.label + ' vs HAZUS'),
         { displayModeBar: false });
@@ -351,22 +351,22 @@
 
             var traces = [
                 makeCurve(params.theta_hazus, params.beta_hazus,
-                          'HAZUS (M<sub>IM</sub>='+params.theta_hazus+', β='+params.beta_hazus+')',
+                          'HAZUS (μ<sub>IM</sub>='+params.theta_hazus+', β='+params.beta_hazus+')',
                           '#27AE60', 'dot', 2)
             ];
             if (has2d) traces.push(
                 makeCurve(params.theta_2d, params.beta_2d,
-                          '2D Fiber (M<sub>IM</sub>='+params.theta_2d+', β='+params.beta_2d+')',
+                          '2D Fiber (μ<sub>IM</sub>='+params.theta_2d+', β='+params.beta_2d+')',
                           '#2980B9', 'dash', 2)
             );
             if (has3d) traces.push(
                 makeCurve(params.theta_3d, params.beta_3d,
-                          '3D Fiber (M<sub>IM</sub>='+params.theta_3d+', β='+params.beta_3d+')',
+                          '3D Fiber (μ<sub>IM</sub>='+params.theta_3d+', β='+params.beta_3d+')',
                           '#C0392B', 'solid', 2)
             );
             if (hasP) traces.push(
                 makeCurve(params.theta_phys, params.beta_phys,
-                          'Physics PSDM (M<sub>IM</sub>='+params.theta_phys+', β='+params.beta_phys+')',
+                          'Physics PSDM (μ<sub>IM</sub>='+params.theta_phys+', β='+params.beta_phys+')',
                           '#8E44AD', 'dashdot', 2)
             );
 
